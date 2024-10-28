@@ -1,21 +1,28 @@
 package ru.itmentor.spring.boot_security.demo.controller;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
+
+
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
+
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import ru.itmentor.spring.boot_security.demo.models.Role;
+import org.springframework.web.bind.annotation.RestController;
+
 import ru.itmentor.spring.boot_security.demo.models.User;
 import ru.itmentor.spring.boot_security.demo.service.UserService;
 
-import java.util.stream.Collectors;
+import java.io.IOException;
+import java.util.List;
 
-@Controller
+
+@RestController
 @ComponentScan("service")
 @RequestMapping("/admin")
 public class AdminController {
@@ -28,59 +35,32 @@ public class AdminController {
     }
 
     @GetMapping({"/", ""})
-    public String redirect(){
-        return "redirect:/admin/users";
+    public void redirect(HttpServletResponse response) throws IOException {
+        response.sendRedirect("/admin/users");
     }
 
     @GetMapping("/users")
-    public String printUsers(ModelMap model){
-        model.addAttribute("users", userService.getAllUsers());
-        model.addAttribute("roles",
-                userService.getAllUsers().stream()
-                        .map(User::getRoles)
-                        .map(roles ->
-                                roles.stream()
-                                .map(Role::getRole)
-                                .collect(Collectors.joining(", "))
-                            )
-                        .collect(Collectors.toList()));
-
-        return "users";
-    }
-
-    @GetMapping(value = "/users/update/{id}")
-    public String updateUserAdminForm(@PathVariable("id") Long id, ModelMap model){
-        User user = userService.getUserById(id);
-        model.addAttribute("user",user);
-        model.addAttribute("roles",
-                user.getRoles().stream()
-                .map(Role::getRole)
-                .collect(Collectors.joining(", ")));
-        return "update_user_admin_form";
-    }
-
-    @GetMapping(value = "/users/create")
-    public String addUserAdminForm(){
-        return "register_user_admin_form";
+    public List<User> printUsers(){
+        return userService.getAllUsers();
     }
 
 
-    @PostMapping(value = "/users/update/{id}")
-    public String changeUser(@PathVariable("id") Long id, @ModelAttribute User user) {
+    @PutMapping(value = "/users/update/{id}")
+    public void changeUser(HttpServletResponse response, @PathVariable("id") Long id, @RequestBody User user) throws IOException {
         user.setId(id);
         userService.updateUser(user);
-        return "redirect:/admin/users";
+        response.setStatus(HttpServletResponse.SC_OK);
     }
 
-    @PostMapping(value = "/users/delete/{id}")
-    public String deleteUser(@PathVariable("id") Long id){
+    @DeleteMapping(value = "/users/delete/{id}")
+    public void deleteUser(HttpServletResponse response, @PathVariable("id") Long id) throws IOException {
         userService.deleteUserById(id);
-        return "redirect:/admin/users";
+        response.setStatus(HttpServletResponse.SC_OK);
     }
 
     @PostMapping(value = "/users/create")
-    public String createUser(@ModelAttribute User user){
+    public void createUser(HttpServletResponse response, @RequestBody User user) throws IOException {
         userService.createUser(user);
-        return "redirect:/admin/users";
+        response.setStatus(HttpServletResponse.SC_OK);
     }
 }

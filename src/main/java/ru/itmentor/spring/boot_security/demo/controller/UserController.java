@@ -4,18 +4,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import ru.itmentor.spring.boot_security.demo.models.Role;
+import org.springframework.web.bind.annotation.RestController;
+
 import ru.itmentor.spring.boot_security.demo.models.User;
 import ru.itmentor.spring.boot_security.demo.service.UserService;
 
-import java.util.stream.Collectors;
 
 
-@Controller
+@RestController
 @ComponentScan("service")
 @RequestMapping("/user")
 public class UserController {
@@ -28,15 +27,9 @@ public class UserController {
     }
 
     @GetMapping()
-    public String printUser(ModelMap model){
+    public User printUser(){
         UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userService.getUserByEmail(userDetails.getUsername());
-        model.addAttribute("user", user);
-        model.addAttribute("roles",
-                user.getRoles().stream()
-                        .map(Role::getRole)
-                        .collect(Collectors.joining(", ")));
-        return "user";
+        return userService.getUserByEmail(userDetails.getUsername());
     }
 
 
